@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <!-- X, Y, Z Groups -->
+        <!-- X Group -->
         <LinearLayout
             android:id="@+id/vxGroup"
             android:layout_width="0dp"
@@ -78,18 +78,24 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Accelerometer Data -->
+    <TextView
+        android:id="@+id/accelerometerData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <!-- Buttons -->
     <Button
         android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Akcelerometr" />
+        android:text="Start" />
 
     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Dalej" />
+        android:text="Next" />
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -18,7 +18,7 @@ import java.util.List;
 public class AccelerometerActivity extends AppCompatActivity {
 
     // UI elements
-    private TextView vx, vy, vz;
+    private TextView vx, vy, vz, accelerometerData;
 
     // Sensor-related variables
     private SensorManager sensorManager;
@@ -33,12 +33,16 @@ public class AccelerometerActivity extends AppCompatActivity {
         vx = findViewById(R.id.vx);
         vy = findViewById(R.id.vy);
         vz = findViewById(R.id.vz);
+        accelerometerData = findViewById(R.id.accelerometerData);
         Button startButton = findViewById(R.id.button);
         Button nextActivityButton = findViewById(R.id.button2);
 
         // Initialize the SensorManager and get a list of available sensors
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL);
+
+        // Display accelerometer info
+        displayAccelerometerInfo();
 
         // Set click listeners for buttons
         startButton.setOnClickListener(v -> startAccelerometer());
@@ -95,5 +99,26 @@ public class AccelerometerActivity extends AppCompatActivity {
     // Display a Toast message
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    // Display accelerometer information
+    private void displayAccelerometerInfo() {
+        if (sensorList.size() > 0) {
+            Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            if (accelerometerSensor != null) {
+                String info = "Accelerometer Name: " + accelerometerSensor.getName() + "\n"
+                        + "Vendor: " + accelerometerSensor.getVendor() + "\n"
+                        + "Version: " + accelerometerSensor.getVersion() + "\n"
+                        + "Type: " + accelerometerSensor.getType() + "\n"
+                        + "Resolution: " + accelerometerSensor.getResolution() + "\n"
+                        + "Power: " + accelerometerSensor.getPower() + " mA\n"
+                        + "Maximum Range: " + accelerometerSensor.getMaximumRange() + "\n";
+                accelerometerData.setText(info);
+            } else {
+                showToast("Error: No accelerometer sensor found.");
+            }
+        } else {
+            showToast("Error: No sensors found.");
+        }
     }
 }
