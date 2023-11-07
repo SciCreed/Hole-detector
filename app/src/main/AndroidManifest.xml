@@ -16,6 +16,9 @@
             android:name=".GyroscopesActivity"
             android:exported="false" />
         <activity
+            android:name=".GravityActivity"
+            android:exported="false" />
+        <activity
             android:name=".AccelerometerActivity"
             android:exported="true">
             <intent-filter>

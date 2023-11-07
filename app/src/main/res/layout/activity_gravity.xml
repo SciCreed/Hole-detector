@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context=".GyroscopesActivity">
+    tools:context=".GravityActivity">
 
     <!-- Horizontal Layout for X, Y, Z -->
     <LinearLayout
@@ -80,7 +80,7 @@
 
     <!-- Accelerometer Data -->
     <TextView
-        android:id="@+id/gyroData"
+        android:id="@+id/gravityData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
