@@ -1,7 +1,9 @@
 package com.example.holedetector;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MenuActivity extends AppCompatActivity {
@@ -17,13 +19,15 @@ public class MenuActivity extends AppCompatActivity {
 
         // Set click listeners for the buttons
         button1.setOnClickListener(v -> {
-            // Handle button1 click
-            // For example: launch a new activity, perform an action, etc.
+            // Create an Intent to open MapActivity
+            Intent intent = new Intent(MenuActivity.this, MapActivity.class);
+            startActivity(intent);
         });
 
         button2.setOnClickListener(v -> {
-            // Handle button2 click
-            // For example: launch a new activity, perform an action, etc.
+            // Create an Intent to open SettingsActivity
+            Intent intent = new Intent(MenuActivity.this, SettingsActivity.class);
+            startActivity(intent);
         });
 
         // Add more listeners or logic for other UI elements as needed
