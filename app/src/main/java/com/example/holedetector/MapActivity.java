@@ -1,22 +1,31 @@
 package com.example.holedetector;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import androidx.appcompat.app.AppCompatActivity;
+import android.view.View;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 
-public class MainActivity extends AppCompatActivity {
-    @Override public void onCreate(Bundle savedInstanceState) {
+public class MapActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Context ctx = getApplicationContext();
         //important! set your user agent to prevent getting banned from the osm servers
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
-        setContentView(R.layout.activity_main);
+
+        setContentView(R.layout.activity_map);
 
         MapView map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
@@ -27,6 +36,12 @@ public class MainActivity extends AppCompatActivity {
         mapController.setZoom(9);
         GeoPoint startPoint = new GeoPoint(53.2544, 14.3310);
         mapController.setCenter(startPoint);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(view -> {
+            //Close this activity
+            finish();
+        });
     }
 
     public void onResume(){
@@ -37,4 +52,5 @@ public class MainActivity extends AppCompatActivity {
         //Configuration.getInstance().save(this, prefs);
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
     }
+
 }
