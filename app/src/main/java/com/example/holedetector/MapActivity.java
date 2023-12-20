@@ -25,21 +25,14 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MapActivity extends AppCompatActivity {
-
-    private static final String DB_NAME = "Bazunia.db";
-    private static final String TABLE_MARKERS = "Markers";
-    private static final String COLUMN_X = "x";
-    private static final String COLUMN_Y = "y";
-
-    private View loadingIndicator;
     private MapView map;
     private MyLocationNewOverlay myLocationOverlay;
     private SQLiteDatabase database;
-    private List<Marker> markers = new ArrayList<>();
+    private final String DB_NAME = "dbbbbd.db";
+    private final String TABLE_MARKERS = "Markers";
+    private final String COLUMN_X = "x";
+    private final String COLUMN_Y = "y";
 
     @SuppressLint("Range")
     @Override
@@ -47,15 +40,25 @@ public class MapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
+        map = findViewById(R.id.map);
+
         initializeLoadingIndicator();
         initializeMap();
         initializeLocationOverlay();
         initializeDatabase();
-        loadMarkersOnMap();
+        loadMarkers();
         addMarkers();
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> finish());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (database != null) {
+            database.close();
+        }
     }
 
     @Override
@@ -65,12 +68,11 @@ public class MapActivity extends AppCompatActivity {
     }
 
     private void initializeLoadingIndicator() {
-        loadingIndicator = getLayoutInflater().inflate(R.layout.loading_indicator, null);
+        View loadingIndicator = getLayoutInflater().inflate(R.layout.loading_indicator, null);
         FrameLayout rootLayout = findViewById(android.R.id.content);
         rootLayout.addView(loadingIndicator);
         loadingIndicator.setVisibility(View.VISIBLE);
 
-        map = findViewById(R.id.map);
         // Wait for the map and location to be fully rendered
         map.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
             if (myLocationOverlay.getMyLocation() != null && map.getBoundingBox().contains(myLocationOverlay.getMyLocation())) {
@@ -84,7 +86,6 @@ public class MapActivity extends AppCompatActivity {
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
 
-        map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
@@ -109,12 +110,33 @@ public class MapActivity extends AppCompatActivity {
         }
     }
 
+    private void loadMarkers() {
+        Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_MARKERS, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            int columnIndexX = cursor.getColumnIndex(COLUMN_X);
+            int columnIndexY = cursor.getColumnIndex(COLUMN_Y);
+            if (columnIndexX >= 0 && columnIndexY >= 0) {
+                do {
+                    float x = cursor.getFloat(columnIndexX);
+                    float y = cursor.getFloat(columnIndexY);
+                    loadMarker(x, y);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+    }
+
+    private void loadMarker(float x, float y) {
+        Marker marker = new Marker(map);
+        marker.setPosition(new GeoPoint(x, y));
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        map.getOverlays().add(marker);
+    }
+
     private void addMarkers() {
-        database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
         addMarker(53.2544f, 14.3310f);
         addMarker(53.2544f, 14.3311f);
         addMarker(53.2544f, 14.3312f);
-        database.close();
     }
 
     private void addMarker(float x, float y) {
@@ -122,31 +144,6 @@ public class MapActivity extends AppCompatActivity {
         values.put(COLUMN_X, x);
         values.put(COLUMN_Y, y);
         database.insert(TABLE_MARKERS, null, values);
-        renderMarker(x, y);
-    }
-
-    private void renderMarker(float x, float y) {
-        Marker marker = new Marker(map);
-        marker.setPosition(new GeoPoint(x, y));
-        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        markers.add(marker);
-    }
-
-    private void loadMarkersOnMap() {
-        database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
-        Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_MARKERS, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                float x = cursor.getFloat(cursor.getColumnIndex(COLUMN_X));
-                float y = cursor.getFloat(cursor.getColumnIndex(COLUMN_Y));
-                renderMarker(x, y);
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
-        database.close();
-
-        for (Marker marker : markers) {
-            map.getOverlays().add(marker);
-        }
+        loadMarker(x, y);
     }
 }
