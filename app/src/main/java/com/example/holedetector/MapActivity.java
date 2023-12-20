@@ -28,8 +28,13 @@ import java.util.List;
 
 public class MapActivity extends AppCompatActivity {
 
-    private final String DBNAME = "Bazunia.db"; // Name for the new database
-    private SQLiteDatabase baza = null;
+    private static final String DB_NAME = "Bazunia.db";
+    private static final String TABLE_MARKERS = "Markers";
+    private static final String COLUMN_X = "x";
+    private static final String COLUMN_Y = "y";
+
+    private MapView map;
+    private SQLiteDatabase database;
     private List<Marker> markers = new ArrayList<>();
 
     @SuppressLint("Range")
@@ -38,61 +43,11 @@ public class MapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        Context ctx = getApplicationContext();
-        // Important! Set your user agent to prevent getting banned from the OSM servers
-        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
-
-        MapView map = findViewById(R.id.map);
-        map.setTileSource(TileSourceFactory.MAPNIK);
-        map.setBuiltInZoomControls(true);
-        map.setMultiTouchControls(true);
-
-        IMapController mapController = map.getController();
-        mapController.setZoom(20);
-
-        // Enable the location overlay
-        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
-        myLocationOverlay.enableMyLocation();
-        myLocationOverlay.enableFollowLocation();
-        map.getOverlays().add(myLocationOverlay);
-
-        // Add markers
-        try {
-            baza = this.openOrCreateDatabase(DBNAME, MODE_PRIVATE, null);
-            baza.execSQL("CREATE TABLE IF NOT EXISTS Markers (x FLOAT, y FLOAT)");
-
-            dodaj(53.2544f, 14.3310f);
-            dodaj(22.78f, 44.32f);
-            dodaj(55.225f, 64.21f);
-
-            String sx, sy;
-
-            Cursor cursor = baza.rawQuery("SELECT * FROM Markers", null);
-            if (cursor.moveToFirst()) {
-                do {
-                    sx = cursor.getString(cursor.getColumnIndex("x"));
-                    sy = cursor.getString(cursor.getColumnIndex("y"));
-                    float x = Float.parseFloat(sx);
-                    float y = Float.parseFloat(sy);
-
-                    GeoPoint pkt = new GeoPoint(x, y);
-                    Marker m = new Marker(map);
-                    m.setPosition(pkt);
-                    m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-                    markers.add(m);
-
-                } while (cursor.moveToNext());
-                cursor.close();
-            }
-
-            baza.close();
-        } catch (SQLiteException e) {
-            Log.e(getClass().getSimpleName(), "Could not create or open the database");
-        }
-
-        for (Marker m : markers) {
-            map.getOverlays().add(m);
-        }
+        initializeMap();
+        initializeLocationOverlay();
+        initializeDatabase();
+        addMarkers();
+        loadMarkersOnMap();
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> finish());
@@ -104,10 +59,76 @@ public class MapActivity extends AppCompatActivity {
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
     }
 
-    private void dodaj(float x, float y) {
-        ContentValues vals = new ContentValues();
-        vals.put("x", x);
-        vals.put("y", y);
-        baza.insert("Markers", null, vals);
+    private void initializeMap() {
+        Context ctx = getApplicationContext();
+        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
+
+        map = findViewById(R.id.map);
+        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setBuiltInZoomControls(true);
+        map.setMultiTouchControls(true);
+
+        IMapController mapController = map.getController();
+        mapController.setZoom(20);
+    }
+
+    private void initializeLocationOverlay() {
+        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
+        myLocationOverlay.enableMyLocation();
+        myLocationOverlay.enableFollowLocation();
+        map.getOverlays().add(myLocationOverlay);
+    }
+
+    private void initializeDatabase() {
+        try {
+            database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
+            database.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_MARKERS + " (" + COLUMN_X + " FLOAT, " + COLUMN_Y + " FLOAT)");
+        } catch (SQLiteException e) {
+            Log.e(getClass().getSimpleName(), "Could not create or open the database");
+        } finally {
+            if (database != null) {
+                database.close();
+            }
+        }
+    }
+
+    private void addMarkers() {
+        database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
+        addMarker(53.2544f, 14.3310f);
+        addMarker(53.2544f, 14.3311f);
+        addMarker(53.2544f, 14.3312f);
+        database.close();
+    }
+
+    private void addMarker(float x, float y) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_X, x);
+        values.put(COLUMN_Y, y);
+        database.insert(TABLE_MARKERS, null, values);
+    }
+
+    private void loadMarkersOnMap() {
+        database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
+        Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_MARKERS, null);
+        if (cursor.moveToFirst()) {
+            do {
+                float x = cursor.getFloat(cursor.getColumnIndex(COLUMN_X));
+                float y = cursor.getFloat(cursor.getColumnIndex(COLUMN_Y));
+
+                GeoPoint point = new GeoPoint(x, y);
+                Marker marker = new Marker(map);
+                marker.setPosition(point);
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                markers.add(marker);
+
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        database.close();
+
+        MapView map = findViewById(R.id.map);
+        for (Marker marker : markers) {
+            map.getOverlays().add(marker);
+        }
     }
 }
