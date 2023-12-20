@@ -18,6 +18,8 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -57,6 +59,16 @@ public class MapActivity extends AppCompatActivity {
         GeoPoint startPoint = new GeoPoint(53.2544, 14.3310);
         mapController.setCenter(startPoint);
 
+        // Enable the location overlay
+map.getOverlays().add(new MyLocationNewOverlay(new GpsMyLocationProvider(this), map));
+
+// Set the map controller to your current location
+MyLocationNewOverlay myLocationOverlay = (MyLocationNewOverlay) map.getOverlays().get(0);
+myLocationOverlay.enableMyLocation();
+myLocationOverlay.enableFollowLocation();
+
+
+        // add markers
         try{
             baza = this.openOrCreateDatabase(DBNAME, MODE_PRIVATE, null);
             baza.execSQL("CREATE TABLE IF NOT EXISTS Markers (x FLOAT, y FLOAT)");
