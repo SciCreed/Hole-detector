@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.util.Log;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -26,6 +27,7 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 public class MapActivity extends AppCompatActivity {
+    private ViewTreeObserver.OnGlobalLayoutListener globalLayoutListener;
     private MapView map;
     private MyLocationNewOverlay myLocationOverlay;
     private SQLiteDatabase database;
@@ -74,12 +76,18 @@ public class MapActivity extends AppCompatActivity {
         loadingIndicator.setVisibility(View.VISIBLE);
 
         // Wait for the map and location to be fully rendered
-        map.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            if (myLocationOverlay.getMyLocation() != null && map.getBoundingBox().contains(myLocationOverlay.getMyLocation())) {
-                // Hide the loading indicator
-                loadingIndicator.setVisibility(View.GONE);
+        globalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if (myLocationOverlay.getMyLocation() != null && map.getBoundingBox().contains(myLocationOverlay.getMyLocation())) {
+                    // Hide the loading indicator
+                    loadingIndicator.setVisibility(View.GONE);
+                    // Unregister the listener
+                    map.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
             }
-        });
+        };
+        map.getViewTreeObserver().addOnGlobalLayoutListener(globalLayoutListener);
     }
 
     private void initializeMap() {
