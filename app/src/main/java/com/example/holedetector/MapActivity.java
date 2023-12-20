@@ -49,8 +49,6 @@ public class MapActivity extends AppCompatActivity {
 
         IMapController mapController = map.getController();
         mapController.setZoom(20);
-        GeoPoint startPoint = new GeoPoint(53.2544, 14.3310);
-        mapController.setCenter(startPoint);
 
         // Enable the location overlay
         MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
