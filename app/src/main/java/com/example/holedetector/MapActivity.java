@@ -51,8 +51,8 @@ public class MapActivity extends AppCompatActivity {
         initializeMap();
         initializeLocationOverlay();
         initializeDatabase();
-        addMarkers();
         loadMarkersOnMap();
+        addMarkers();
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> finish());
@@ -122,6 +122,14 @@ public class MapActivity extends AppCompatActivity {
         values.put(COLUMN_X, x);
         values.put(COLUMN_Y, y);
         database.insert(TABLE_MARKERS, null, values);
+        renderMarker(x, y);
+    }
+
+    private void renderMarker(float x, float y) {
+        Marker marker = new Marker(map);
+        marker.setPosition(new GeoPoint(x, y));
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        markers.add(marker);
     }
 
     private void loadMarkersOnMap() {
@@ -131,13 +139,7 @@ public class MapActivity extends AppCompatActivity {
             do {
                 float x = cursor.getFloat(cursor.getColumnIndex(COLUMN_X));
                 float y = cursor.getFloat(cursor.getColumnIndex(COLUMN_Y));
-
-                GeoPoint point = new GeoPoint(x, y);
-                Marker marker = new Marker(map);
-                marker.setPosition(point);
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-                markers.add(marker);
-
+                renderMarker(x, y);
             } while (cursor.moveToNext());
             cursor.close();
         }
