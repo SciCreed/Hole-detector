@@ -85,10 +85,6 @@ public class MapActivity extends AppCompatActivity {
             database.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_MARKERS + " (" + COLUMN_X + " FLOAT, " + COLUMN_Y + " FLOAT)");
         } catch (SQLiteException e) {
             Log.e(getClass().getSimpleName(), "Could not create or open the database");
-        } finally {
-            if (database != null) {
-                database.close();
-            }
         }
     }
 
@@ -110,7 +106,7 @@ public class MapActivity extends AppCompatActivity {
     private void loadMarkersOnMap() {
         database = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
         Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_MARKERS, null);
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 float x = cursor.getFloat(cursor.getColumnIndex(COLUMN_X));
                 float y = cursor.getFloat(cursor.getColumnIndex(COLUMN_Y));
@@ -126,7 +122,6 @@ public class MapActivity extends AppCompatActivity {
         }
         database.close();
 
-        MapView map = findViewById(R.id.map);
         for (Marker marker : markers) {
             map.getOverlays().add(marker);
         }
