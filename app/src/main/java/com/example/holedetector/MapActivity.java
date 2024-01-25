@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
+import com.github.nisrulz.sensey.Sensey;
+import com.github.nisrulz.sensey.ShakeDetector;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.osmdroid.api.IMapController;
@@ -53,6 +55,18 @@ public class MapActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> finish());
+
+        Sensey.getInstance().init(this,Sensey.SAMPLING_PERIOD_GAME);
+        ShakeDetector.ShakeListener shakeListener=new ShakeDetector.ShakeListener() {
+            @Override public void onShakeDetected() {
+                //
+            }
+
+            @Override public void onShakeStopped() {
+                addMarker((float) myLocationOverlay.getMyLocation().getLatitude(), (float) myLocationOverlay.getMyLocation().getLongitude());
+            }
+        };
+        Sensey.getInstance().startShakeDetection(5,50,shakeListener);
     }
 
     @Override
@@ -61,6 +75,7 @@ public class MapActivity extends AppCompatActivity {
         if (database != null) {
             database.close();
         }
+        Sensey.getInstance().stop();
     }
 
     @Override

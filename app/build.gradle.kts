@@ -41,4 +41,5 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
     implementation("org.osmdroid:osmdroid-android:6.1.14")
+    implementation("com.github.nisrulz:sensey:1.9.0")
 }
