@@ -1,13 +1,21 @@
 package com.example.holedetector;
 
+import static android.location.LocationManager.GPS_PROVIDER;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
@@ -28,17 +36,23 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MapActivity extends AppCompatActivity {
     private ViewTreeObserver.OnGlobalLayoutListener globalLayoutListener;
     private MapView map;
     private MyLocationNewOverlay myLocationOverlay;
     private SQLiteDatabase database;
+
+    private List<Marker> markerList = new ArrayList<Marker>();
+
     private final String DB_NAME = "dbbbbd.db";
     private final String TABLE_MARKERS = "Markers";
     private final String COLUMN_X = "x";
     private final String COLUMN_Y = "y";
 
-    @SuppressLint("Range")
+    @SuppressLint({"Range", "MissingPermission"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +81,21 @@ public class MapActivity extends AppCompatActivity {
             }
         };
         Sensey.getInstance().startShakeDetection(5,50,shakeListener);
+
+
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        LocationListener listener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                Marker m = findNearestMarker();
+                double distance = myLocationOverlay.getMyLocation().distanceToAsDouble(m.getPosition());
+                if(distance < 10){
+                    printAlert();
+                }
+            }
+        };
+        locationManager.requestLocationUpdates(GPS_PROVIDER, 10, 5, listener);
+
     }
 
     @Override
@@ -154,6 +183,7 @@ public class MapActivity extends AppCompatActivity {
         marker.setPosition(new GeoPoint(x, y));
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
         map.getOverlays().add(marker);
+        markerList.add(marker);
     }
 
     private void addMarkers() {
@@ -169,4 +199,47 @@ public class MapActivity extends AppCompatActivity {
         database.insert(TABLE_MARKERS, null, values);
         loadMarker(x, y);
     }
+
+    private Marker findNearestMarker(){
+        if(!markerList.isEmpty()){
+            GeoPoint p = myLocationOverlay.getMyLocation();
+            double d = 0;
+            Marker sel = null;
+            for(Marker m : markerList) {
+                if (sel == null) {
+                    sel = m;
+                    d = p.distanceToAsDouble(m.getPosition());
+                } else {
+                    double dist = p.distanceToAsDouble(m.getPosition());
+                    if (d > dist){
+                        sel = m;
+                        d = dist;
+                    }
+                }
+            }
+            return sel;
+        }
+        return null;
+    }
+
+
+    private void printAlert(){
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+            //set icon
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            //set title
+            .setTitle("HOLE NEARBY")
+            //set message
+            .setMessage("Get ur penis ready")
+            //set positive button
+            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    //set what would happen when positive button is clicked
+
+                }
+            })
+        .show();
+    }
+
 }
