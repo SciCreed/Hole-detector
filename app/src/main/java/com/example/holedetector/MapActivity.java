@@ -2,26 +2,26 @@ package com.example.holedetector;
 
 import static android.location.LocationManager.GPS_PROVIDER;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.view.View;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.nisrulz.sensey.Sensey;
 import com.github.nisrulz.sensey.ShakeDetector;
@@ -40,17 +40,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MapActivity extends AppCompatActivity {
-    private ViewTreeObserver.OnGlobalLayoutListener globalLayoutListener;
-    private MapView map;
-    private MyLocationNewOverlay myLocationOverlay;
-    private SQLiteDatabase database;
-
-    private List<Marker> markerList = new ArrayList<Marker>();
-
     private final String DB_NAME = "dbbbbd.db";
     private final String TABLE_MARKERS = "Markers";
     private final String COLUMN_X = "x";
     private final String COLUMN_Y = "y";
+    private ViewTreeObserver.OnGlobalLayoutListener globalLayoutListener;
+    private MapView map;
+    private MyLocationNewOverlay myLocationOverlay;
+    private SQLiteDatabase database;
+    private final List<Marker> markerList = new ArrayList<Marker>();
 
     @SuppressLint({"Range", "MissingPermission"})
     @Override
@@ -70,17 +68,19 @@ public class MapActivity extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> finish());
 
-        Sensey.getInstance().init(this,Sensey.SAMPLING_PERIOD_GAME);
-        ShakeDetector.ShakeListener shakeListener=new ShakeDetector.ShakeListener() {
-            @Override public void onShakeDetected() {
+        Sensey.getInstance().init(this, Sensey.SAMPLING_PERIOD_GAME);
+        ShakeDetector.ShakeListener shakeListener = new ShakeDetector.ShakeListener() {
+            @Override
+            public void onShakeDetected() {
                 //
             }
 
-            @Override public void onShakeStopped() {
+            @Override
+            public void onShakeStopped() {
                 addMarker((float) myLocationOverlay.getMyLocation().getLatitude(), (float) myLocationOverlay.getMyLocation().getLongitude());
             }
         };
-        Sensey.getInstance().startShakeDetection(5,50,shakeListener);
+        Sensey.getInstance().startShakeDetection(5, 50, shakeListener);
 
 
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -89,8 +89,8 @@ public class MapActivity extends AppCompatActivity {
             public void onLocationChanged(@NonNull Location location) {
                 Marker m = findNearestMarker();
                 double distance = myLocationOverlay.getMyLocation().distanceToAsDouble(m.getPosition());
-                if(distance < 10){
-                    printAlert();
+                if (distance < 10) {
+                    showToast();
                 }
             }
         };
@@ -200,18 +200,18 @@ public class MapActivity extends AppCompatActivity {
         loadMarker(x, y);
     }
 
-    private Marker findNearestMarker(){
-        if(!markerList.isEmpty()){
+    private Marker findNearestMarker() {
+        if (!markerList.isEmpty()) {
             GeoPoint p = myLocationOverlay.getMyLocation();
             double d = 0;
             Marker sel = null;
-            for(Marker m : markerList) {
+            for (Marker m : markerList) {
                 if (sel == null) {
                     sel = m;
                     d = p.distanceToAsDouble(m.getPosition());
                 } else {
                     double dist = p.distanceToAsDouble(m.getPosition());
-                    if (d > dist){
+                    if (d > dist) {
                         sel = m;
                         d = dist;
                     }
@@ -222,24 +222,10 @@ public class MapActivity extends AppCompatActivity {
         return null;
     }
 
-
-    private void printAlert(){
-        AlertDialog alertDialog = new AlertDialog.Builder(this)
-            //set icon
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            //set title
-            .setTitle("HOLE NEARBY")
-            //set message
-            .setMessage("Get ur penis ready")
-            //set positive button
-            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    //set what would happen when positive button is clicked
-
-                }
-            })
-        .show();
+    private void showToast() {
+        Toast.makeText(this, "HOLE NEARBY: Get ready", Toast.LENGTH_LONG).show();
+        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.alert);
+        mediaPlayer.start();
     }
 
 }
